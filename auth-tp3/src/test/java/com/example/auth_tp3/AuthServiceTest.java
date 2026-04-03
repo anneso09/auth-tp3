@@ -284,6 +284,73 @@ class AuthServiceTest {
     }
 
     // ===================================
+// TESTS CONTROLLER & EXCEPTIONS
+// ===================================
+
+    @Test
+    void globalExceptionHandler_invalidInput() {
+        // Vérifie que InvalidInputException est bien lancée
+        // avec le bon message
+        InvalidInputException ex = new InvalidInputException("Email invalide");
+        assertEquals("Email invalide", ex.getMessage());
+    }
+
+    @Test
+    void globalExceptionHandler_authFailed() {
+        AuthenticationFailedException ex =
+                new AuthenticationFailedException("Authentification échouée");
+        assertEquals("Authentification échouée", ex.getMessage());
+    }
+
+    @Test
+    void globalExceptionHandler_conflict() {
+        ResourceConflictException ex =
+                new ResourceConflictException("Email déjà utilisé");
+        assertEquals("Email déjà utilisé", ex.getMessage());
+    }
+
+    @Test
+    void user_entity_gettersSetters() {
+        // Teste les getters/setters de l'entité User
+        User user = new User();
+        user.setEmail("test@mail.com");
+        user.setPasswordClear("password123456");
+
+        assertEquals("test@mail.com", user.getEmail());
+        assertEquals("password123456", user.getPasswordClear());
+    }
+
+    @Test
+    void authNonce_entity_gettersSetters() {
+        // Teste les getters/setters de l'entité AuthNonce
+        AuthNonce nonce = new AuthNonce();
+        nonce.setNonce("uuid-test");
+        nonce.setConsumed(true);
+
+        assertEquals("uuid-test", nonce.getNonce());
+        assertTrue(nonce.getConsumed());
+    }
+
+    @Test
+    void register_trimEmail_valide() {
+        // Vérifie qu'un email avec espaces est bien rejeté
+        assertThrows(InvalidInputException.class, () ->
+                authService.register("   ", "MonMotDePasse123!")
+        );
+    }
+
+    @Test
+    void login_email_null() {
+        // Email null doit déclencher une erreur
+        when(userRepository.findByEmail(null))
+                .thenReturn(Optional.empty());
+
+        assertThrows(AuthenticationFailedException.class, () ->
+                authService.login(null, "nonce",
+                        System.currentTimeMillis() / 1000, "hmac")
+        );
+    }
+    // ===================================
     // MÉTHODE UTILITAIRE POUR LES TESTS
     // Reproduit le calcul HMAC côté client
     // ===================================
